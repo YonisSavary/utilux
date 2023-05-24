@@ -1,0 +1,69 @@
+#!/bin/bash
+
+function installCodeExtention()
+{
+    res=$(code --install-extension "$1" 2>&1);
+    already_installed=$(echo $res | grep 'already installed' | wc -l);
+
+    if (( $already_installed > 0 ))
+    then
+        echo -e "\e[32m  - [ALREADY-INSTALLED] $1 $alias";
+    else
+        echo "$res";
+    fi
+    echo -ne "\e[0m";
+}
+
+function isInstalled()
+{
+    missing=$(dpkg -s "$1" 2>&1 | grep "not installed" | wc -l)
+
+    if (( $missing > 0 ))
+    then
+        if [ ! -z "$(which $1)" ];
+        then
+            return 1;
+        fi
+        return 0;
+    fi
+    return 1;
+}
+
+function checkInstalled()
+{
+    isInstalled "$1"
+    installed=$?
+
+    if (( $installed == 0))
+    then
+        echo -e "\e[31m  - [MISSING] $1 $alias";
+    else
+        echo -e "\e[32m  - [OK] $1 $alias";
+    fi
+    echo -ne "\e[0m";
+}
+
+echo "Languages/tools to install";
+checkInstalled "php8.0";
+checkInstalled "php8.0-mysql";
+checkInstalled "composer" "php-composer";
+checkInstalled "sqlite3";
+checkInstalled "nodejs";
+checkInstalled "lessc" "less";
+
+echo "Software to install";
+checkInstalled "filezilla";
+checkInstalled "code" "vscode";
+
+
+isInstalled 'code';
+if [ "$?" == "1" ]
+then
+    echo "Checking code extensions..."
+    installCodeExtention "GitHub.github-vscode-theme"
+    installCodeExtention "PKief.material-icon-theme"
+    installCodeExtention "zhuangtongfa.material-theme"
+    installCodeExtention "bmewburn.vscode-intelephense-client"
+    installCodeExtention "mechatroner.rainbow-csv"
+    installCodeExtention "shardulm94.trailing-spaces"
+fi
